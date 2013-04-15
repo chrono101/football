@@ -111,11 +111,34 @@ class Game(Base):
         self.date = date
 
     def __str__(self):
-        retval = "[GAME] Date:{} HTID:{} ATID:{} SCORE:{}-{} Simulated:{}".format(
-            self.date
-            self.home_team_id
-            self.away_team_id
-            self.home_team_score
-            self.away_team_score
+        retval = "[GAME] Date:{} HTID:{} ATID:{} Score:{}-{} Simulated:{}".format(
+            self.date,
+            self.home_team_id,
+            self.away_team_id,
+            self.home_team_score,
+            self.away_team_score,
             self.simulated
+            )
+
+'''
+class Simulation
+Defines a simulation of a football game between two teams
+'''
+class Simulation(Base):
+    __tablename__ = 'simulations'
+    simulation_id = Column(Integer, primary_key=True)
+    game_id = Column(Integer, ForeignKey("games.game_id"), nullable=False)
+    home_team_chain = Column(PickleType)
+    away_team_chain = Column(PickleType)
+
+    def __init__(self, game_id, home_team_chain, away_team_chain):
+        self.game_id = game_id
+        self.home_team_chain = home_team_chain
+        self.away_team_chain = away_team_chain
+
+    def __str__(self):
+        retval = "[SIMULATION] GID:{}\nHT CHAIN: {}\n AT CHAIN: {}".format(
+            self.game_id,
+            self.home_team_chain,
+            self.away_team_chain
             )
