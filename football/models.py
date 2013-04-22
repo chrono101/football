@@ -1,9 +1,4 @@
-from sqlalchemy import (
-    Column,
-    Integer,
-    Text,
-    Boolean,
-    )
+from sqlalchemy import *
 
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -137,8 +132,48 @@ class Simulation(Base):
         self.away_team_chain = away_team_chain
 
     def __str__(self):
-        retval = "[SIMULATION] GID:{}\nHT CHAIN: {}\n AT CHAIN: {}".format(
+        retval = "[SIMULATION] SID:{} GID:{}\nHT CHAIN: {}\n AT CHAIN: {}".format(
+            self.simulation_id,
             self.game_id,
             self.home_team_chain,
             self.away_team_chain
+            )
+
+'''
+class Simulation Node
+Defines a node in the simulation graph
+'''
+class SimulationNode(Base):
+    __tablename__ = 'simulation_nodes'
+    simulation_node_id = Column(Integer, primary_key=True)
+    simulation_id = Column(Integer, ForeignKey("simulations.simulation_id"), nullable=False)
+    team_id = Column(Integer, ForeignKey("teams.team_id"), nullable=False)
+    down = Column(Integer)
+    distance_to_go = Column(Integer)
+    yard_line = Column(Integer)
+    quarter = Column(Integer)
+    seconds_remaining = Column(Integer)
+    score_difference = Column(Integer)
+
+    def __init__(self, simulation_id, team_id, down, distance_to_go, yard_line, quarter, seconds_remaining, score_difference):
+        self.simulation_id = simulation_id
+        self.team_id = team_id
+        self.down = down
+        self.distance_to_go = distance_to_go
+        self.yard_line = yard_line
+        self.quarter = quarter
+        self.seconds_remaining = seconds_remaining
+        self.score_difference = score_difference
+
+    def __str__(self): 
+        retval = "[NODE] NID:{} SID:{} TID:{} DDT:{}/{}/{} QS:{}/{} Score Diff:{}".format(
+            self.simulation_node_id,
+            self.simulation_id,
+            self.team_id,
+            self.down,
+            self.distance_to_go,
+            self.yard_line,
+            self.quarter,
+            self.seconds_remaining,
+            self.score_difference
             )

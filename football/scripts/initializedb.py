@@ -9,12 +9,7 @@ from pyramid.paster import (
     setup_logging,
     )
 
-from ..models import (
-    DBSession,
-    MyModel,
-    Base,
-    )
-
+from ..models import *
 
 def usage(argv):
     cmd = os.path.basename(argv[0])
@@ -33,5 +28,4 @@ def main(argv=sys.argv):
     DBSession.configure(bind=engine)
     Base.metadata.create_all(engine)
     with transaction.manager:
-        model = MyModel(name='one', value=1)
-        DBSession.add(model)
+      return
