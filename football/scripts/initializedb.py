@@ -28,4 +28,5 @@ def main(argv=sys.argv):
     DBSession.configure(bind=engine)
     Base.metadata.create_all(engine)
     with transaction.manager:
-      return
+      team = Team("K-State", "KSU", 2013)
+      DBSession.add(team)

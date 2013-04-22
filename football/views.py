@@ -3,7 +3,18 @@ from pyramid.view import view_config
 
 from sqlalchemy.exc import DBAPIError
 
+from pyramid.httpexceptions import HTTPFound
+from pyramid.url import route_url
+
 from .models import *
+
+@view_config(route_name='home', renderer='templates/home.pt')
+def home_view(request):
+    try: 
+        ksu = DBSession.query(Team).filter(Team.name == "K-State").first()
+    except DBAPIError:
+        return Response(conn_err_msg, content_type="text/plain", status_int=500)
+    return {'team': ksu}
 
 conn_err_msg = """\
 Pyramid is having a problem using your SQL database.  The problem
