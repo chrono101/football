@@ -15,24 +15,8 @@
 </head>
 <body>
   <div id="wrap">
-    <div id="top">
-      <div class="top align-center">
-      </div>
-    </div>
-    <div id="middle">
-      <div class="middle align-center">
-        <p class="app-welcome">
-          ${request}
-        </p>
-      </div>
-    </div>
-    <div id="bottom">
-      <div class="bottom">
-        <div id="left" class="align-right">
-        </div>
-        <div id="right" class="align-left">
-        </div>
-      </div>
+    <div class="align-center">
+      <p>${request}</p>
     </div>
   </div>
   <div id="footer">

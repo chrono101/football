@@ -8,13 +8,40 @@ from pyramid.url import route_url
 
 from .models import *
 
+import os 
+import csv
+import sys
+import datetime
+
 @view_config(route_name='home', renderer='templates/home.pt')
 def home_view(request):
-    try: 
-        ksu = DBSession.query(Team).filter(Team.name == "K-State").first()
-    except DBAPIError:
-        return Response(conn_err_msg, content_type="text/plain", status_int=500)
-    return {'team': ksu}
+    return {}
+
+@view_config(route_name='import', renderer='templates/import.pt')
+def import_view(request):
+    params = request.GET
+
+    if ("file" in params):
+      with open (os.getcwd() + '/football/csv/' + params["file"], 'rb') as f:
+        dr = csv.DictReader(f)
+        for row in dr:
+          off_team = get_or_create(DBSession, Team, name=row["off"], short_name=row["off"], season_year=row["season"])
+          def_team = get_or_create(DBSession, Team, name=row["def"], short_name=row["def"], season_year=row["season"])
+
+          game_date = datetime.strptime(row["gameid"][0:7], '%Y%md%d')
+          #game = get_or_create(DBSession, Game, date=game_date, off
+
+      return {"file": row}
+    else:
+      return {"file": "none"}
+
+def get_or_create(session, model, **kwargs):
+    instance = session.query(model).filter_by(**kwargs).first()
+    if instance:
+        return instance
+    else:
+        instance = model(**kwargs)
+        return instance
 
 conn_err_msg = """\
 Pyramid is having a problem using your SQL database.  The problem
