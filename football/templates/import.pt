@@ -17,6 +17,14 @@
   <div id="wrap">
     <div class="align-center">
     ${file}
+    <hr>
+    ${home}
+    <hr>
+    ${away}
+    <hr>
+    ${rows_processed} rows processed
+    <hr>
+    ${date}
     </div>
   </div>
   <div id="footer">
