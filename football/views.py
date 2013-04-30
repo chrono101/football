@@ -23,6 +23,15 @@ def home_view(request):
 def import_view(request):
     params = request.GET
 
+    def get_or_create(session, model, **kwargs):
+      instance = session.query(model).filter_by(**kwargs).first()
+      if instance:
+        return instance
+      else:
+        instance = model(**kwargs)
+        return instance
+
+
     if ("file" in params):
       with open (os.getcwd() + '/football/csv/' + params["file"], 'rb') as f:
         dr = csv.DictReader(f)
@@ -44,28 +53,25 @@ def import_view(request):
           home_team = DBSession.query(Team).filter_by(name=hometeamstr).first()
           away_team = DBSession.query(Team).filter_by(name=awayteamstr).first()
 
-          game = DBSession.query(Game).filter_by(date=game_date, home_team_id=home_team.team_id, away_team_id=away_team.team_id).first()
-          if game:
-            log.debug('Game already existed, id: %s', game.game_id)
-            if home_team.name is off_team.name:
+          game = get_or_create(
+              DBSession,
+              Game,
+              home_team_id=home_team.team_id,
+              away_team_id=away_team.team_id,
+              home_team_score=row["offscore"],
+              away_team_score=row["defscore"],
+              simulated=False,
+              date=game_date
+              )
+          if home_team.name is off_team.name:
               game.home_team_score = row["offscore"]
               game.away_team_score = row["defscore"]
-            else:
-              game.home_team_score = row["defscore"]
-              game.away_team_score = row["offscore"]
           else:
-            log.debug('Creating new game')
-            game = get_or_create(
-                DBSession,
-                Game,
-                home_team_id=home_team.team_id,
-                away_team_id=away_team.team_id,
-                home_team_score=row["offscore"],
-                away_team_score=row["defscore"],
-                simulated=False,
-                date=game_date
-                )
+            game.home_team_score = row["defscore"]
+            game.away_team_score = row["offscore"]
           DBSession.add(game)
+
+          DBSession.flush()
           
 
           # Creates Play Object
@@ -85,20 +91,15 @@ def import_view(request):
               )
 
           DBSession.add(play)
-          
+
+          DBSession.flush()
+
           # Increment Counter
           rows_processed += 1
       return {"file": row, "home": hometeamstr, "away":awayteamstr, "rows_processed":rows_processed, "date":game_date }
     else:
       return {"file": "none"}
 
-def get_or_create(session, model, **kwargs):
-    instance = session.query(model).filter_by(**kwargs).first()
-    if instance:
-        return instance
-    else:
-        instance = model(**kwargs)
-        return instance
 
 conn_err_msg = """\
 Pyramid is having a problem using your SQL database.  The problem

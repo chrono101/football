@@ -19,8 +19,8 @@ Defines a football team.
 class Team(Base):
     __tablename__ = 'teams'
     team_id = Column(Integer, primary_key=True)
-    name = Column(Text, unique=True)
-    short_name = Column(Text)
+    name = Column(String(255), unique=True)
+    short_name = Column(String(255))
     season_year = Column(Integer)
 
     def __init__(self, name, short_name, season_year):
@@ -53,7 +53,7 @@ class Play(Base):
     quarter = Column(Integer)
     seconds_remaining = Column(Integer)
     simulated = Column(Boolean)
-    play_type = Column(Text)
+    play_type = Column(String(255))
 
     def __init__(self, game_id, offensive_team_id, defensive_team_id, down, distance_to_go, yard_line, quarter, seconds_remaining, simulated, play_type):
         self.game_id = game_id
@@ -114,6 +114,7 @@ class Game(Base):
             self.away_team_score,
             self.simulated
             )
+        return retval
 
 '''
 class Simulation
@@ -138,6 +139,7 @@ class Simulation(Base):
             self.home_team_chain,
             self.away_team_chain
             )
+        return retval
 
 '''
 class Simulation Node
@@ -177,3 +179,4 @@ class SimulationNode(Base):
             self.seconds_remaining,
             self.score_difference
             )
+        return retval
