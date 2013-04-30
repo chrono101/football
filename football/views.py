@@ -53,24 +53,34 @@ def import_view(request):
           home_team = DBSession.query(Team).filter_by(name=hometeamstr).first()
           away_team = DBSession.query(Team).filter_by(name=awayteamstr).first()
 
-          game = get_or_create(
-              DBSession,
-              Game,
+          if home_team.name is off_team.name:
+            homescore = row["offscore"]
+            awayscore = row["defscore"]
+          else:
+            homescore = row["defscore"]
+            awayscore = row["offscore"]
+
+          game = DBSession.query(Game).filter_by(
               home_team_id=home_team.team_id,
               away_team_id=away_team.team_id,
-              home_team_score=row["offscore"],
-              away_team_score=row["defscore"],
               simulated=False,
               date=game_date
-              )
-          if home_team.name is off_team.name:
-              game.home_team_score = row["offscore"]
-              game.away_team_score = row["defscore"]
+              ).first()
+          if game:
+               game.home_team_score = homescore
+               game.away_team_score = awayscore
           else:
-            game.home_team_score = row["defscore"]
-            game.away_team_score = row["offscore"]
-          DBSession.add(game)
+            game = Game(
+                home_team_id = home_team.team_id,
+                away_team_id = away_team.team_id,
+                home_team_score = homescore,
+                away_team_score = awayscore,
+                simulated=False,
+                date=game_date
+                )
+                
 
+          DBSession.add(game)
           DBSession.flush()
           
 
