@@ -22,19 +22,19 @@ class Team(Base):
     name = Column(String(255), unique=True)
     short_name = Column(String(255))
     season_year = Column(Integer)
-
+  
     def __init__(self, name, short_name, season_year):
-        self.name = name
-        self.short_name = short_name
-        self.season_year = season_year
-
+      self.name = name
+      self.short_name = short_name
+      self.season_year = season_year
+  
     def __str__(self):
         retval = "[TEAM] {}/{} Y:{} ID:{}".format(
             self.name,
             self.short_name,
             self.season_year,
             self.team_id
-            )
+            ) 
         return retval
 
 '''

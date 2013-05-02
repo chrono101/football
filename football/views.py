@@ -77,12 +77,10 @@ def import_view(request):
                 away_team_score = awayscore,
                 simulated=False,
                 date=game_date
-                )
-                
+                )               
 
           DBSession.add(game)
-          DBSession.flush()
-          
+          DBSession.flush()          
 
           # Creates Play Object
           play = get_or_create(
@@ -101,7 +99,6 @@ def import_view(request):
               )
 
           DBSession.add(play)
-
           DBSession.flush()
 
           # Increment Counter
@@ -109,6 +106,9 @@ def import_view(request):
       return {"file": row, "home": hometeamstr, "away":awayteamstr, "rows_processed":rows_processed, "date":game_date }
     else:
       return {"file": "none"}
+
+@view_config(route_name='create_simulation', renderer='templates/createsim.pt')
+def import_view(request):
 
 
 conn_err_msg = """\
