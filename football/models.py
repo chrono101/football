@@ -54,8 +54,9 @@ class Play(Base):
     seconds_remaining = Column(Integer)
     simulated = Column(Boolean)
     play_type = Column(String(255))
+    score_difference = Column(Integer)
 
-    def __init__(self, game_id, offensive_team_id, defensive_team_id, down, distance_to_go, yard_line, quarter, seconds_remaining, simulated, play_type):
+    def __init__(self, game_id, offensive_team_id, defensive_team_id, down, distance_to_go, yard_line, quarter, seconds_remaining, simulated, play_type, score_difference):
         self.game_id = game_id
         self.offensive_team_id = offensive_team_id
         self.defensive_team_id = defensive_team_id
@@ -66,9 +67,10 @@ class Play(Base):
         self.seconds_remaining = seconds_remaining
         self.simulated = simulated
         self.play_type = play_type
+        self.score_difference = score_difference 
     
     def __str__(self):
-      retval = "[PLAY] G:{} OFF:{} DEF:{} DDT:{}/{}/{} QS:{}/{} Simulated:{} Type:{}".format(
+      retval = "[PLAY] G:{} OFF:{} DEF:{} DDT:{}/{}/{} QS:{}/{} ScoreDiff: {} Simulated:{} Type:{}".format(
           self.game_id,
           self.offensive_team_id,
           self.defensive_team_id,
@@ -77,6 +79,7 @@ class Play(Base):
           self.yard_line,
           self.quarter,
           self.seconds_remaining,
+          self.score_difference,
           self.simulated,
           self.play_type
           )
@@ -156,8 +159,9 @@ class SimulationNode(Base):
     quarter = Column(Integer)
     seconds_remaining = Column(Integer)
     score_difference = Column(Integer)
+    count = Column(Integer)
 
-    def __init__(self, simulation_id, team_id, down, distance_to_go, yard_line, quarter, seconds_remaining, score_difference):
+    def __init__(self, simulation_id, team_id, down, distance_to_go, yard_line, quarter, seconds_remaining, score_difference, count):
         self.simulation_id = simulation_id
         self.team_id = team_id
         self.down = down
@@ -168,7 +172,7 @@ class SimulationNode(Base):
         self.score_difference = score_difference
 
     def __str__(self): 
-        retval = "[NODE] NID:{} SID:{} TID:{} DDT:{}/{}/{} QS:{}/{} Score Diff:{}".format(
+        retval = "[NODE] NID:{} SID:{} TID:{} DDT:{}/{}/{} QS:{}/{} Score Diff:{} Count:{}".format(
             self.simulation_node_id,
             self.simulation_id,
             self.team_id,
@@ -177,6 +181,7 @@ class SimulationNode(Base):
             self.yard_line,
             self.quarter,
             self.seconds_remaining,
-            self.score_difference
+            self.score_difference,
+            self.count
             )
         return retval

@@ -12,8 +12,7 @@ import os
 import csv
 import sys
 from datetime import datetime, date
-import logging
-log = logging.getLogger(__name__)
+from pykov import *
 
 @view_config(route_name='home', renderer='templates/home.pt')
 def home_view(request):
@@ -83,6 +82,11 @@ def import_view(request):
           DBSession.flush()          
 
           # Creates Play Object
+          try: 
+            seconds = (int(row["min"]) * 60) + int(row["sec"])
+          except ValueError:
+            seconds = (60 * 60)
+
           play = get_or_create(
               DBSession,
               Play,
@@ -93,9 +97,10 @@ def import_view(request):
               distance_to_go=row["togo"],
               yard_line=row["ydline"],
               quarter=row["qtr"],
-              seconds_remaining=row["sec"],
+              seconds_remaining=seconds,
               simulated=False,
-              play_type="Unknown"
+              play_type="Unknown",
+              score_difference=int(row["scorediff"])
               )
 
           DBSession.add(play)
@@ -108,8 +113,37 @@ def import_view(request):
       return {"file": "none"}
 
 @view_config(route_name='create_simulation', renderer='templates/createsim.pt')
-def import_view(request):
+def createsim_view(request):
+    params = request.GET
+    team1_id = params["team1"]
+    team2_id = params["team2"]
 
+    def roundN(x, base=5):
+        return int(base * round(float(x)/base))
+    
+    teamstrings = []
+    team = DBSession.query(Play).filter(Play.offensive_team_id==team1_id).all()
+    for row in team:
+        statestring = "{}{}{}{}{}".format(
+            row.down,
+            roundN(row.distance_to_go, 10),
+            roundN(row.yard_line, 25),
+            roundN(row.seconds_remaining, 240),
+            roundN(row.score_difference, 7)
+            )
+        
+        teamstrings.append(statestring)
+        p, P = maximum_likelihood_probabilities(tuple(teamstrings),lag_time=1, separator='0')
+
+
+
+    # Create Markov Chain for Team 1
+
+    # Create Markov Chain for Team 2
+
+    # Create Simulation 
+
+    return {"team1": P} 
 
 conn_err_msg = """\
 Pyramid is having a problem using your SQL database.  The problem

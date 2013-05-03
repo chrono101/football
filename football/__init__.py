@@ -17,7 +17,7 @@ def main(global_config, **settings):
     config.add_static_view('static', 'static', cache_max_age=3600)
     config.add_route('home', '/')
     config.add_route('import', '/import')
-    config.add_route('create_simulation', '/simcreate')
+    config.add_route('create_simulation', '/create_simulation')
     config.add_route('simulate', '/simulate')
     config.scan()
     return config.make_wsgi_app()
