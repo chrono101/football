@@ -136,11 +136,9 @@ class Simulation(Base):
         self.away_team_chain = away_team_chain
 
     def __str__(self):
-        retval = "[SIMULATION] SID:{} GID:{}\nHT CHAIN: {}\n AT CHAIN: {}".format(
+        retval = "[SIMULATION] SID:{} GID:{}".format(
             self.simulation_id,
             self.game_id,
-            self.home_team_chain,
-            self.away_team_chain
             )
         return retval
 

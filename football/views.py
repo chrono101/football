@@ -87,6 +87,30 @@ def import_view(request):
           except ValueError:
             seconds = (60 * 60)
 
+          if "TOUCHDOWN" in row["description"]:
+            playtypestr = "Touchdown"
+          elif "extra point is GOOD" in row["description"]:
+            playtypestr = "PAT"
+          elif "extra point is Blocked" in row["description"]:
+            playtypestr = "Blocked"
+          elif "BLOCKED" in row["description"]:
+            playtypestr = "Blocked"
+          elif "ATTEMPT SUCCEEDS" in row["description"]:
+            playtypestr = "2PT"
+          elif "FUMBLES" in row["description"]:
+            playtypestr = "Turnover"
+          elif "INTERCEPTED" in row["description"]:
+            playtypestr = "Turnover"
+          elif "field goal is GOOD" in row["description"]:
+            playtypestr = "FG"
+          elif "SAFETY" in row["description"]:
+            playtypestr = "Safety"
+          elif "punts" in row["description"]:
+            playtypestr = "Punt"
+          else:
+            playtypestr = "Unknown"
+          
+
           play = get_or_create(
               DBSession,
               Play,
@@ -99,7 +123,7 @@ def import_view(request):
               quarter=row["qtr"],
               seconds_remaining=seconds,
               simulated=False,
-              play_type="Unknown",
+              play_type=playtypestr,
               score_difference=int(row["scorediff"])
               )
 
@@ -118,32 +142,85 @@ def createsim_view(request):
     team1_id = params["team1"]
     team2_id = params["team2"]
 
+    def get_or_create(session, model, **kwargs):
+      instance = session.query(model).filter_by(**kwargs).first()
+      if instance:
+        return instance
+      else:
+        instance = model(**kwargs)
+        return instance
+
+
     def roundN(x, base=5):
         return int(base * round(float(x)/base))
+
+    def toGoString(x):
+      if 1 <= x <= 3:
+        return "S"
+      elif 4 <= x <= 10:
+        return "M"
+      elif 11 <= x <= 99:
+        return "L"
+      else:
+        return "Unknown"
+
+    def createChain(team_id):
+      teamstrings = []
+      team = DBSession.query(Play).filter(Play.offensive_team_id==team_id).all()
+      for row in team:
+          if row.down != 0:
+            statestring = "{}{}{}".format(
+                row.down,
+                toGoString(row.distance_to_go),
+                roundN(row.yard_line, 10),
+                )
+            teamstrings.append(statestring)
+          if row.play_type == "Touchdown":
+            teamstrings.append(row.play_type)
+          if row.play_type == "FG":
+            teamstrings.append("FG")
+            teamstrings.append("Kickoff")
+          if row.play_type == "PAT":
+            teamstrings.append("PAT")
+            teamstrings.append("Kickoff")
+          if row.play_type == "2PT":
+            teamstrings.append("2PT")
+            teamstrings.append("Kickoff")
+          if row.play_type == "Punt":
+            teamstrings.append("Punt")      
+      p, P = maximum_likelihood_probabilities(tuple(teamstrings),lag_time=1, separator='0')
+      return p, P
+
+    c1, C1 = createChain(team1_id)
+    c2, C2 = createChain(team2_id)
     
-    teamstrings = []
-    team = DBSession.query(Play).filter(Play.offensive_team_id==team1_id).all()
-    for row in team:
-        statestring = "{}{}{}{}{}".format(
-            row.down,
-            roundN(row.distance_to_go, 10),
-            roundN(row.yard_line, 25),
-            roundN(row.seconds_remaining, 240),
-            roundN(row.score_difference, 7)
-            )
+    game = get_or_create(
+        DBSession,
+        Game,
+        home_team_id=team1_id, 
+        away_team_id=team2_id,
+        home_team_score=0,
+        away_team_score=0,
+        simulated=True,
+        date=date.today()
+        )
+
+    DBSession.add(game)
+    DBSession.flush()
+
+
+    simulation = get_or_create(
+        DBSession, 
+        Simulation,
+        game_id=game.game_id,
+        home_team_chain=C1,
+        away_team_chain=C2
+        )
         
-        teamstrings.append(statestring)
-        p, P = maximum_likelihood_probabilities(tuple(teamstrings),lag_time=1, separator='0')
+    DBSession.add(simulation)
+    DBSession.flush()
 
-
-
-    # Create Markov Chain for Team 1
-
-    # Create Markov Chain for Team 2
-
-    # Create Simulation 
-
-    return {"team1": P} 
+    return {"simulation":simulation.simulation_id} 
 
 conn_err_msg = """\
 Pyramid is having a problem using your SQL database.  The problem

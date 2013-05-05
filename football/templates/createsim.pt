@@ -16,7 +16,7 @@
 <body>
   <div id="wrap">
     <div class="align-center">
-    ${team1}
+    ${simulation.simulation_id}
     </div>
   </div>
   <div id="footer">
