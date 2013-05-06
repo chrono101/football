@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" xmlns:tal="http://xml.zope.org/namespaces/tal">
 <head>
-  <title>Create a Simulation - Football Simulator</title>
+  <title>Simulation - Football Simulator</title>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
   <meta name="keywords" content="python web application" />
   <meta name="description" content="pyramid web application" />
@@ -16,6 +16,11 @@
 <body>
   <div id="wrap">
     <div class="align-center">
+    ${home}
+    <br>
+    ${away}
+    <br>
+    ${log}
     </div>
   </div>
   <div id="footer">

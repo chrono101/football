@@ -8,11 +8,12 @@ from pyramid.url import route_url
 
 from .models import *
 
+from datetime import datetime, date
+from pykov import *
+from random import *
 import os 
 import csv
 import sys
-from datetime import datetime, date
-from pykov import *
 
 @view_config(route_name='home', renderer='templates/home.pt')
 def home_view(request):
@@ -178,15 +179,12 @@ def createsim_view(request):
             teamstrings.append(row.play_type)
           if row.play_type == "FG":
             teamstrings.append("FG")
-            teamstrings.append("Kickoff")
             teamstrings.append("EOD")
           if row.play_type == "PAT":
             teamstrings.append("PAT")
-            teamstrings.append("Kickoff")
             teamstrings.append("EOD")
           if row.play_type == "2PT":
             teamstrings.append("2PT")
-            teamstrings.append("Kickoff")
             teamstrings.append("EOD")
           if row.play_type == "Punt":
             teamstrings.append("Punt")
@@ -229,8 +227,81 @@ def createsim_view(request):
 
 @view_config(route_name='simulate', renderer='templates/simulate.pt')
 def simulate_view(request):
-    return {}
+    params = request.GET
+    simulation_id = params["sid"]
+    simulations = params["n"]
 
+    simulation = DBSession.query(Simulation).filter(Simulation.simulation_id==simulation_id).first()
+    game = DBSession.query(Game).filter(Game.game_id==simulation.game_id).first()
+    home_team = DBSession.query(Team).filter(Team.team_id==game.home_team_id).first()
+    away_team = DBSession.query(Team).filter(Team.team_id==game.away_team_id).first()
+
+    teams = [home_team, away_team]
+    chains = [simulation.home_team_chain, simulation.away_team_chain]
+    scores = {0:dict(), 1:dict()}
+
+    output_log = dict()
+    # 3600 seconds = 1 hour = 4 * 15-minute quarters
+    gameclock = 3600
+    avg_time_per_play = 30
+
+    for i in range(int(simulations)):
+        logkey = "sim"+str(i)        
+        output_log[logkey] = []
+
+        default_state = '1M80'
+        last_state = default_state
+        
+        curteam = randrange(0,2)
+
+        scores[0][i] = 0
+        scores[1][i] = 0
+        
+        output_log[logkey].append(teams[curteam].name + ":" + default_state)       
+        while gameclock >= 0:
+            # Move from the last state
+            current_state = chains[curteam].move(last_state)
+            output_log[logkey].append(teams[curteam].name + ":" + current_state)
+            
+            # If a special state, take action
+            if current_state == "Touchdown":
+                scores[curteam][i] = scores[curteam][i] + 6
+                last_state = current_state
+            elif current_state == "FG":
+                scores[curteam][i] = scores[curteam][i] + 3
+                curteam = int(not bool(curteam))
+                output_log[logkey].append(teams[curteam].name + ":" + default_state)
+                last_state = default_state
+            elif current_state == "2PT":
+                scores[curteam][i] = scores[curteam][i] + 2
+                curteam = int(not bool(curteam))
+                output_log[logkey].append(teams[curteam].name + ":" + default_state)
+                last_state = default_state
+            elif current_state == "PAT":
+                scores[curteam][i] = scores[curteam][i] + 1
+                curteam = int(not bool(curteam))
+                output_log[logkey].append(teams[curteam].name + ":" + default_state)
+                last_state = default_state
+            elif current_state == "Punt":
+                curteam = int(not bool(curteam))
+                output_log[logkey].append(teams[curteam].name + ":" + default_state)
+                last_state = default_state
+            elif current_state == "Turnover":
+                curteam = int(not bool(curteam))
+                # Change staate to spot of the ball
+                last_state = "1M" + str(100-int(last_state[2:]))
+                output_log[logkey].append(teams[curteam].name + ":" + last_state)
+            else:
+                last_state = current_state
+   
+            # Take time off the clock
+            gameclock = gameclock - avg_time_per_play       
+        output_log[logkey].append("FINAL SCORE: {} - {} {} - {}".format(
+            teams[0].name,
+            scores[0][i],
+            teams[1].name,
+            scores[1][i]))
+    return {"home":home_team.name,"away":away_team.name,"log":output_log}
 
 conn_err_msg = """\
 Pyramid is having a problem using your SQL database.  The problem
