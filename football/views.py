@@ -150,7 +150,6 @@ def createsim_view(request):
         instance = model(**kwargs)
         return instance
 
-
     def roundN(x, base=5):
         return int(base * round(float(x)/base))
 
@@ -180,15 +179,22 @@ def createsim_view(request):
           if row.play_type == "FG":
             teamstrings.append("FG")
             teamstrings.append("Kickoff")
+            teamstrings.append("EOD")
           if row.play_type == "PAT":
             teamstrings.append("PAT")
             teamstrings.append("Kickoff")
+            teamstrings.append("EOD")
           if row.play_type == "2PT":
             teamstrings.append("2PT")
             teamstrings.append("Kickoff")
+            teamstrings.append("EOD")
           if row.play_type == "Punt":
-            teamstrings.append("Punt")      
-      p, P = maximum_likelihood_probabilities(tuple(teamstrings),lag_time=1, separator='0')
+            teamstrings.append("Punt")
+            teamstrings.append("EOD")
+          if row.play_type == "Turnover":
+            teamstrings.append("Turnover")
+            teamstrings.append("EOD")
+      p, P = maximum_likelihood_probabilities(tuple(teamstrings),lag_time=1, separator='EOD')
       return p, P
 
     c1, C1 = createChain(team1_id)
@@ -208,7 +214,6 @@ def createsim_view(request):
     DBSession.add(game)
     DBSession.flush()
 
-
     simulation = get_or_create(
         DBSession, 
         Simulation,
@@ -220,7 +225,12 @@ def createsim_view(request):
     DBSession.add(simulation)
     DBSession.flush()
 
-    return {"simulation":simulation.simulation_id} 
+    return {"simulation":C1} 
+
+@view_config(route_name='simulate', renderer='templates/simulate.pt')
+def simulate_view(request):
+    return {}
+
 
 conn_err_msg = """\
 Pyramid is having a problem using your SQL database.  The problem

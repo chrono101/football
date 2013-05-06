@@ -16,7 +16,7 @@
 <body>
   <div id="wrap">
     <div class="align-center">
-    ${simulation.simulation_id}
+    ${simulation}
     </div>
   </div>
   <div id="footer">
