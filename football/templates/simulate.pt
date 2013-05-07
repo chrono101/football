@@ -16,11 +16,13 @@
 <body>
   <div id="wrap">
     <div class="align-center">
-    ${home}
-    <br>
-    ${away}
-    <br>
-    ${log}
+    <h1>${away_team} @ ${home_team}</h1>
+    <h1>${simulations} games played</h1>
+    <h2>${wins[1]} (${away_team_percentage}%) wins to ${wins[0]} (${home_team_percentage}%) wins</h2>
+    <h2>${ties} (${ties_percentage}%) ties</h2>
+    <h2>Over-Under: ${overunder} Line: ${line}</h2>
+    <h3>${away_team} avg score: ${away_avg_score} ${home_team} avg score: ${home_avg_score}</h3>
+    <hr>
     </div>
   </div>
   <div id="footer">
