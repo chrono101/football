@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" xmlns:tal="http://xml.zope.org/namespaces/tal">
 <head>
-  <title>Football Simulator - Home Page</title>
+  <title>Football Simulator</title>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
   <meta name="keywords" content="python web application" />
   <meta name="description" content="pyramid web application" />
@@ -10,17 +10,41 @@
   <link rel="stylesheet" href="http://static.pylonsproject.org/fonts/nobile/stylesheet.css" media="screen" />
   <link rel="stylesheet" href="http://static.pylonsproject.org/fonts/neuton/stylesheet.css" media="screen" />
   <!--[if lte IE 6]>
-  <link rel="stylesheet" href="${request.static_url('football:static/ie6.css')}" type="text/css" media="screen" charset="utf-8" />
+    <link rel="stylesheet" href="${request.static_url('football:static/ie6.css')}" type="text/css" media="screen" charset="utf-8" />
   <![endif]-->
 </head>
 <body>
-  <div id="wrap">
+<div id="wrap">
+  <div id="top-small">
     <div class="align-center">
-      <p>${request}</p>
+      <h1>Football Simulator</h1>     
     </div>
   </div>
-  <div id="footer">
-    <div class="footer">&copy; Copyright 2013, Cole Cooper</div>
+  <div id="bottom">
+    <div class="bottom">
+      <div id="left">
+        <h2>About</h2>
+        <p>
+          This web application will simulate football games using data
+          imported from CSV files. To simulate games, 3 steps must be 
+          performed:
+        </p>
+        <ol>
+          <li><a href="/import">Import Play-by-Play Data</a></li>
+          <li><a href="/create_simulation">Create a Simulation Matchup</a></li>
+          <li><a href="/simulate">Simulate the Matchup</a></li>
+        </ol>
+      </div>
+      <div id="right">
+        <h2>Simulations</h2>
+        <ul>
+        </ul>
+      </div>
+    </div>
   </div>
+</div>
+<div id="footer">
+  <div class="footer">&copy; Copyright 2013, Cole Cooper</div>
+</div>
 </body>
 </html>

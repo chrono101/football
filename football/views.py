@@ -18,7 +18,23 @@ import sys
 
 @view_config(route_name='home', renderer='templates/home.pt')
 def home_view(request):
-    return {}
+    simulations = DBSession.query(Simulation).all()
+    gamestrings = dict()
+    for row in simulations:
+      game = DBSession.query(Game).filter_by(game_id=row.game_id).first()
+      home_team = DBSession.query(Team).filter_by(team_id=game.home_team_id).first()
+      away_team = DBSession.query(Team).filter_by(team_id=game.away_team_id).first()
+
+      gamestrings[row.simulation_id] = "{} {} @ {} {}".format(
+          away_team.season_year,
+          away_team.name,
+          home_team.season_year,
+          home_team.name
+          )
+    
+
+    
+    return {"simulations":simulations, "gamestrings":gamestrings}
 
 @view_config(route_name='import', renderer='templates/import.pt')
 def import_view(request):
