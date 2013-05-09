@@ -17,8 +17,45 @@
   <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
   <script>
     $(function() {
-      $("#accordion").accordion({ collapsible: true });
+      $("#accordion").accordion({ collapsible: true, active: false });
     });
+  </script>
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+    google.setOnLoadCallback(drawChart);
+    function drawChart() {
+      var team_data = google.visualization.arrayToDataTable([
+        ['Stat', '${away_team.name}', '${home_team.name}'],
+        ['Avg TDs', ${stats.away.avg_tds}, ${stats.home.avg_tds}],
+        ['Avg FGs',  ${stats.away.avg_fgs},${stats.home.avg_fgs}],
+        ['Avg Punts', ${stats.away.avg_punts}, ${stats.home.avg_punts}],
+        ['Avg TOs',  ${stats.away.avg_tos}, ${stats.home.avg_tos}]
+      ]);
+
+      var team_options = {
+        title: 'Team Stats',
+        fontName: 'NobileRegular',
+      };
+
+      var win_data = google.visualization.arrayToDataTable([
+        ['Wins', 'Wins'],
+        ['${away_team.name}', ${stats.away.wins}],
+        ['${home_team.name}', ${stats.home.wins}],
+        ['Uncertain', ${stats.ties}]
+      ]);
+
+      var win_options = {
+        title: 'Wins Distribution',
+        fontName: 'NobileRegular'
+      }
+
+      var team_chart = new google.visualization.ColumnChart(document.getElementById('team_chart_div'));
+      var win_chart = new google.visualization.PieChart(document.getElementById('win_chart_div'))
+
+      team_chart.draw(team_data, team_options);
+      win_chart.draw(win_data, win_options);
+    }
   </script>
 </head>
 <body>
@@ -29,7 +66,7 @@
     </div>
   </div>
   <div id="middle">
-    <div class="middle align-center">
+    <div class="align-center">
         <h1>${away_team.name} @ ${home_team.name}</h1>
         <h1>${simulations} games played</h1>
     </div>
@@ -39,7 +76,7 @@
       <h2>Estimated Betting Odds</h2>
       <h2>Over-Under: ${stats.overunder} Line: ${stats.line}</h2>
     </div>
-    <div class="bottom">
+    <div class="bottom" style="height:320px">
       <div id="left">
         <div class="align-center">
           <h1>Away Team</h1>
@@ -74,8 +111,13 @@
           <b>Avg TOs:</b> ${stats.home.avg_tos}<br>
         </code>
       </div>
-      <div class="align-center">
-        <h1>Example Game Logs (10 max)</h1>
+    </div>
+    <div class="bottom align-center">
+      <div id="team_chart_div"></div>
+      <div id="win_chart_div"></div>
+    </div>
+    <div class="bottom align-center">
+      <h1>Example Game Logs (10 max)</h1>
         <div id="accordion">
           <div tal:repeat="game game_log" tal:omit-tag="" comment="Placeholder for loop">
             <h3 tal:content="python:'Example Game '+str(repeat['game'].index)"></h3>
