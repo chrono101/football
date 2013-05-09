@@ -18,7 +18,7 @@ import sys
 
 @view_config(route_name='home', renderer='templates/home.pt')
 def home_view(request):
-    simulations = DBSession.query(Simulation).all()
+    simulations = DBSession.query(Simulation).limit(10)
     gamestrings = dict()
     for row in simulations:
       game = DBSession.query(Game).filter_by(game_id=row.game_id).first()
@@ -31,9 +31,7 @@ def home_view(request):
           home_team.season_year,
           home_team.name
           )
-    
 
-    
     return {"simulations":simulations, "gamestrings":gamestrings}
 
 @view_config(route_name='import', renderer='templates/import.pt')

@@ -36,8 +36,9 @@
         </ol>
       </div>
       <div id="right">
-        <h2>Simulations</h2>
+        <h2>Available Simulations</h2>
         <ul>
+          <li tal:repeat="s simulations"><a href="/simulate?sid=${s.simulation_id}&n=10000">${gamestrings[s.simulation_id]}</a></li>
         </ul>
       </div>
     </div>
