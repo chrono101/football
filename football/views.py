@@ -246,25 +246,33 @@ def simulate_view(request):
     simulation_id = params["sid"]
     simulations = params["n"]
 
+    # Initial DB Queries
     simulation = DBSession.query(Simulation).filter(Simulation.simulation_id==simulation_id).first()
     game = DBSession.query(Game).filter(Game.game_id==simulation.game_id).first()
     home_team = DBSession.query(Team).filter(Team.team_id==game.home_team_id).first()
     away_team = DBSession.query(Team).filter(Team.team_id==game.away_team_id).first()
 
-    teams = [home_team, away_team]
-    chains = [simulation.home_team_chain, simulation.away_team_chain]
+    # This is stats stuff
     scores = {0:dict(), 1:dict()}
     overunders = list()
     wins = {0:0, 1:0}
-
+    tds = {0:0, 1:0}
+    fgs = {0:0, 1:0}
+    punts = {0:0, 1:0}
+    tos = {0:0, 1:0}
+    plays = {0:0, 1:0}
     output_log = dict()
+
+    # Simulation stuff
+    teams = [home_team, away_team]
+    chains = [simulation.home_team_chain, simulation.away_team_chain]
     avg_time_per_play = 30
     default_state = '1M80'    
     i = 0
 
     while i < int(simulations):
-        logkey = "sim"+str(i)        
-        output_log[logkey+"-pbp"] = list()
+        logkey = str(i)        
+        output_log[logkey] = list()
 
         last_state = default_state
         
@@ -276,47 +284,52 @@ def simulate_view(request):
         # 3600 seconds = 1 hour = 4 * 15-minute quarters
         gameclock = 3600
        
-        output_log[logkey+"-pbp"].append(teams[curteam].name + ":" + default_state)       
+        output_log[logkey].append(teams[curteam].name + ":" + default_state)       
         while gameclock >= 0:
             # Move from the last state
             current_state = chains[curteam].move(last_state)
-            output_log[logkey+"-pbp"].append(teams[curteam].name + ":" + current_state)
+            output_log[logkey].append(teams[curteam].name + ":" + current_state)
+            plays[curteam] = plays[curteam] + 1
             
             # If a special state, take action
             if current_state == "Touchdown":
                 scores[curteam][i] = scores[curteam][i] + 6
+                tds[curteam] = tds[curteam] + 1
                 last_state = current_state
             elif current_state == "FG":
                 scores[curteam][i] = scores[curteam][i] + 3
+                fgs[curteam] = fgs[curteam] + 1
                 curteam = int(not bool(curteam))
-                output_log[logkey+"-pbp"].append(teams[curteam].name + ":" + default_state)
+                output_log[logkey].append(teams[curteam].name + ":" + default_state)
                 last_state = default_state
             elif current_state == "2PT":
                 scores[curteam][i] = scores[curteam][i] + 2
                 curteam = int(not bool(curteam))
-                output_log[logkey+"-pbp"].append(teams[curteam].name + ":" + default_state)
+                output_log[logkey].append(teams[curteam].name + ":" + default_state)
                 last_state = default_state
             elif current_state == "PAT":
                 scores[curteam][i] = scores[curteam][i] + 1
                 curteam = int(not bool(curteam))
-                output_log[logkey+"-pbp"].append(teams[curteam].name + ":" + default_state)
+                output_log[logkey].append(teams[curteam].name + ":" + default_state)
                 last_state = default_state
             elif current_state == "Punt":
+                punts[curteam] = punts[curteam] + 1
                 curteam = int(not bool(curteam))
-                output_log[logkey+"-pbp"].append(teams[curteam].name + ":" + default_state)
+                output_log[logkey].append(teams[curteam].name + ":" + default_state)
                 last_state = default_state
             elif current_state == "Turnover":
+                tos[curteam] = tos[curteam] + 1
                 curteam = int(not bool(curteam))
                 # Change staate to spot of the ball
                 last_state = "1M" + str(100-int(last_state[2:]))
-                output_log[logkey+"-pbp"].append(teams[curteam].name + ":" + last_state)
+                output_log[logkey].append(teams[curteam].name + ":" + last_state)
             else:
                 last_state = current_state
    
             # Take time off the clock
             gameclock = gameclock - avg_time_per_play       
         
-        output_log[logkey+"-pbp"].append("FINAL SCORE: {} - {} {} - {}".format(
+        output_log[logkey].append("FINAL SCORE: {} - {} {} - {}".format(
             teams[0].name,
             scores[0][i],
             teams[1].name,
@@ -329,7 +342,7 @@ def simulate_view(request):
           pass
         overunders.append(scores[0][i] + scores[1][i])
         i = i+1
-    over_under = np.mean(overunders)
+    
     home_avg_score = np.mean(scores[0].values())
     away_avg_score = np.mean(scores[1].values())
     ties = (int(simulations)-(wins[0]+wins[1]))
@@ -339,21 +352,41 @@ def simulate_view(request):
         line = "{} by {}".format(away_team.name, round(away_avg_score-home_avg_score))
     else:
         line = "{} and {} tie at {}".format(home_team.name, away_team.name, home_avg_score)
+
+    stats = {
+        "line":line, 
+        "overunder":np.mean(overunders),
+        "ties":ties,
+        "ties_percent":round(100*ties/float(simulations), 2),
+        "home":{
+            "wins":wins[0],
+            "wins_percent":round(100*wins[0]/float(simulations), 2),
+            "avg_score":round(np.mean(scores[0].values()), 2),
+            "avg_plays":round(plays[0]/float(simulations), 2),
+            "avg_tds":round(tds[0]/float(simulations), 2),
+            "avg_fgs":round(fgs[0]/float(simulations), 2),
+            "avg_punts":round(punts[0]/float(simulations), 2),
+            "avg_tos":round(tos[0]/float(simulations), 2)
+        },
+        "away":{
+            "wins":wins[1],
+            "wins_percent":round(100*wins[1]/float(simulations), 2),
+            "avg_score":round(np.mean(scores[1].values()), 2),
+            "avg_plays":round(plays[1]/float(simulations), 2),
+            "avg_tds":round(tds[1]/float(simulations), 2),
+            "avg_fgs":round(fgs[1]/float(simulations), 2),
+            "avg_punts":round(punts[1]/float(simulations), 2),
+            "avg_tos":round(tos[1]/float(simulations), 2)
+        }
+    }
+
     return {
-      "home_team":home_team.name,
-      "away_team":away_team.name,
-      "simulations":simulations,
-      "game_log":output_log, 
-      "wins":wins, 
-      "ties":ties,
-      "ties_percentage":round(100*ties/float(simulations), 2),
-      "home_team_percentage":round(100*wins[0]/float(simulations), 2),
-      "away_team_percentage":round(100*wins[1]/float(simulations), 2),
-      "overunder":over_under, 
-      "line":line,
-      "home_avg_score":round(home_avg_score, 2),
-      "away_avg_score":round(away_avg_score, 2)
-      }
+      "home_team":home_team, 
+      "away_team":away_team, 
+      "simulations":simulations, 
+      "game_log":sample(output_log.values(), min(int(simulations), 10)), 
+      "stats":stats
+    }
 
 conn_err_msg = """\
 Pyramid is having a problem using your SQL database.  The problem

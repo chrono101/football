@@ -12,21 +12,86 @@
   <!--[if lte IE 6]>
   <link rel="stylesheet" href="${request.static_url('football:static/ie6.css')}" type="text/css" media="screen" charset="utf-8" />
   <![endif]-->
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+  <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+  <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+  <script>
+    $(function() {
+      $("#accordion").accordion({ collapsible: true });
+    });
+  </script>
 </head>
 <body>
-  <div id="wrap">
+<div id="wrap">
+  <div id="top-small">
     <div class="align-center">
-    <h1>${away_team} @ ${home_team}</h1>
-    <h1>${simulations} games played</h1>
-    <h2>${wins[1]} (${away_team_percentage}%) wins to ${wins[0]} (${home_team_percentage}%) wins</h2>
-    <h2>${ties} (${ties_percentage}%) ties</h2>
-    <h2>Over-Under: ${overunder} Line: ${line}</h2>
-    <h3>${away_team} avg score: ${away_avg_score} ${home_team} avg score: ${home_avg_score}</h3>
-    <hr>
+      <h1>Football Simulator</h1>     
     </div>
   </div>
-  <div id="footer">
-    <div class="footer">&copy; Copyright 2013, Cole Cooper</div>
+  <div id="middle">
+    <div class="middle align-center">
+        <h1>${away_team.name} @ ${home_team.name}</h1>
+        <h1>${simulations} games played</h1>
+    </div>
   </div>
+  <div id="bottom">
+    <div class="align-center">
+      <h2>Estimated Betting Odds</h2>
+      <h2>Over-Under: ${stats.overunder} Line: ${stats.line}</h2>
+    </div>
+    <div class="bottom">
+      <div id="left">
+        <div class="align-center">
+          <h1>Away Team</h1>
+        </div>
+        <code>
+          <b>Team:</b> ${away_team.season_year} ${away_team.name}<br>
+          <b>Wins:</b> ${stats.away.wins}<br>
+          <b>Win %:</b> ${stats.away.wins_percent}<br>
+          <b>Uncertainty:</b> ${stats.ties} games (${stats.ties_percent}%)<br>
+          <b>Avg Score:</b> ${stats.away.avg_score}<br>
+          <b>Avg Plays:</b> ${stats.away.avg_plays}<br>
+          <b>Avg TDs:</b> ${stats.away.avg_tds}<br>
+          <b>Avg FGs:</b> ${stats.away.avg_fgs}<br>
+          <b>Avg Punts:</b> ${stats.away.avg_punts}<br>
+          <b>Avg TOs:</b> ${stats.away.avg_tos}<br>
+        </code>
+      </div>
+      <div id="right">
+        <div class="align-center">
+          <h1>Home Team</h1>
+        </div>
+        <code>
+          <b>Team:</b> ${home_team.season_year} ${home_team.name}<br>
+          <b>Wins:</b> ${stats.home.wins}<br>
+          <b>Win %:</b> ${stats.home.wins_percent}<br>
+          <b>Uncertainty:</b> ${stats.ties} games (${stats.ties_percent}%)<br>
+          <b>Avg Score:</b> ${stats.home.avg_score}<br>
+          <b>Avg Plays:</b> ${stats.home.avg_plays}<br>
+          <b>Avg TDs:</b> ${stats.home.avg_tds}<br>
+          <b>Avg FGs:</b> ${stats.home.avg_fgs}<br>
+          <b>Avg Punts:</b> ${stats.home.avg_punts}<br>
+          <b>Avg TOs:</b> ${stats.home.avg_tos}<br>
+        </code>
+      </div>
+      <div class="align-center">
+        <h1>Example Game Logs (10 max)</h1>
+        <div id="accordion">
+          <div tal:repeat="game game_log" tal:omit-tag="" comment="Placeholder for loop">
+            <h3 tal:content="python:'Example Game '+str(repeat['game'].index)"></h3>
+            <div>
+              <ol>
+                <li tal:repeat="play game">${play}</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      <br><br><br>
+    </div>
+  </div>
+</div>
+<div id="footer">
+  <div class="footer">&copy; Copyright 2013, Cole Cooper</div>
+</div>
 </body>
 </html>
