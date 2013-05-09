@@ -46,9 +46,15 @@ def import_view(request):
         instance = model(**kwargs)
         return instance
 
+    def getFileListing():
+      filelist = list()
+      for filename in os.listdir(os.getcwd() + '/football/csv'):
+        filelist.append(filename)
+      return filelist
 
     if ("file" in params):
-      with open (os.getcwd() + '/football/csv/' + params["file"], 'rb') as f:
+      filename = os.getcwd() + '/football/csv/' + params["file"]
+      with open (filename, 'rb') as f:
         dr = csv.DictReader(f)
         rows_processed = 0
         for row in dr:
@@ -148,15 +154,13 @@ def import_view(request):
 
           # Increment Counter
           rows_processed += 1
-      return {"file": row, "home": hometeamstr, "away":awayteamstr, "rows_processed":rows_processed, "date":game_date }
+      return {"file": filename, "rows_processed":rows_processed, "other_files":getFileListing() }
     else:
-      return {"file": "none"}
+      return {"file": "No File Selected", "rows_processed":0, "other_files":getFileListing() }
 
 @view_config(route_name='create_simulation', renderer='templates/createsim.pt')
 def createsim_view(request):
     params = request.GET
-    team1_id = params["team1"]
-    team2_id = params["team2"]
 
     def get_or_create(session, model, **kwargs):
       instance = session.query(model).filter_by(**kwargs).first()
@@ -165,6 +169,13 @@ def createsim_view(request):
       else:
         instance = model(**kwargs)
         return instance
+
+    def getTeamListing():
+      teamlist = dict()
+      teams = DBSession.query(Team).all()
+      for team in teams:
+        teamlist[team.team_id] = str(team.season_year) + " " + team.name
+      return teamlist
 
     def roundN(x, base=5):
         return int(base * round(float(x)/base))
@@ -210,35 +221,58 @@ def createsim_view(request):
       p, P = maximum_likelihood_probabilities(tuple(teamstrings),lag_time=1, separator='EOD')
       return p, P
 
-    c1, C1 = createChain(team1_id)
-    c2, C2 = createChain(team2_id)
+    if ("home" in params) and ("away" in params):
+      home_id = params['home'].decode('utf-8')
+      away_id = params['away'].decode('utf-8')
+
+      c1, C1 = createChain(home_id)
+      c2, C2 = createChain(away_id)
     
-    game = get_or_create(
-        DBSession,
-        Game,
-        home_team_id=team1_id, 
-        away_team_id=team2_id,
-        home_team_score=0,
-        away_team_score=0,
-        simulated=True,
-        date=date.today()
-        )
+      game = get_or_create(
+          DBSession,
+          Game,
+          home_team_id=home_id, 
+          away_team_id=away_id,
+          home_team_score=0,
+          away_team_score=0,
+          simulated=True,
+          date=date.today()
+          )
+  
+      DBSession.add(game)
+      DBSession.flush()
+  
+      simulation = DBSession.query(Simulation).filter_by(game_id=game.game_id).first()
+      if simulation:
+        simulation.home_team_chain=C1
+        simulation.away_team_chain=C2
+      else:
+        simulation = Simulation(
+          game_id=game.game_id,
+          home_team_chain=C1,
+          away_team_chain=C2
+          )
+          
+      DBSession.add(simulation)
+      DBSession.flush()
 
-    DBSession.add(game)
-    DBSession.flush()
-
-    simulation = get_or_create(
-        DBSession, 
-        Simulation,
-        game_id=game.game_id,
-        home_team_chain=C1,
-        away_team_chain=C2
-        )
-        
-    DBSession.add(simulation)
-    DBSession.flush()
-
-    return {"simulation":C1} 
+      return {
+        "simulation": {
+          "home":C1, 
+          "away":C2
+        }, 
+        "result":type(home_id), 
+        "team_list":getTeamListing()
+      } 
+    else: 
+      return {
+        "simulation":{
+          "home":dict(), 
+          "away":dict()
+        }, 
+        "result":"No Simulation Created",
+        "team_list":getTeamListing()
+      }
 
 @view_config(route_name='simulate', renderer='templates/simulate.pt')
 def simulate_view(request):
@@ -254,7 +288,6 @@ def simulate_view(request):
 
     # This is stats stuff
     scores = {0:dict(), 1:dict()}
-    overunders = list()
     wins = {0:0, 1:0}
     tds = {0:0, 1:0}
     fgs = {0:0, 1:0}
@@ -340,12 +373,10 @@ def simulate_view(request):
           wins[1] = wins[1] + 1
         else:
           pass
-        overunders.append(scores[0][i] + scores[1][i])
         i = i+1
     
-    home_avg_score = np.mean(scores[0].values())
-    away_avg_score = np.mean(scores[1].values())
-    ties = (int(simulations)-(wins[0]+wins[1]))
+    home_avg_score = np.mean(np.percentile(scores[0].values(), 95))
+    away_avg_score = np.mean(np.percentile(scores[1].values(), 95))
     if home_avg_score > away_avg_score:
         line = "{} by {}".format(home_team.name, round(home_avg_score-away_avg_score))
     elif home_avg_score < away_avg_score:
@@ -353,15 +384,18 @@ def simulate_view(request):
     else:
         line = "{} and {} tie at {}".format(home_team.name, away_team.name, home_avg_score)
 
+    ties = (int(simulations)-(wins[0]+wins[1]))
+
     stats = {
         "line":line, 
-        "overunder":np.mean(overunders),
+        "overunder":(away_avg_score + home_avg_score),
         "ties":ties,
         "ties_percent":round(100*ties/float(simulations), 2),
         "home":{
             "wins":wins[0],
             "wins_percent":round(100*wins[0]/float(simulations), 2),
             "avg_score":round(np.mean(scores[0].values()), 2),
+            "std_score":round(np.mean(np.percentile(scores[0].values(), 95)), 2),
             "avg_plays":round(plays[0]/float(simulations), 2),
             "avg_tds":round(tds[0]/float(simulations), 2),
             "avg_fgs":round(fgs[0]/float(simulations), 2),
@@ -372,6 +406,7 @@ def simulate_view(request):
             "wins":wins[1],
             "wins_percent":round(100*wins[1]/float(simulations), 2),
             "avg_score":round(np.mean(scores[1].values()), 2),
+            "std_score":round(np.mean(np.percentile(scores[1].values(), 95)), 2),
             "avg_plays":round(plays[1]/float(simulations), 2),
             "avg_tds":round(tds[1]/float(simulations), 2),
             "avg_fgs":round(fgs[1]/float(simulations), 2),
@@ -385,7 +420,8 @@ def simulate_view(request):
       "away_team":away_team, 
       "simulations":simulations, 
       "game_log":sample(output_log.values(), min(int(simulations), 10)), 
-      "stats":stats
+      "stats":stats,
+      "sid":simulation_id
     }
 
 conn_err_msg = """\

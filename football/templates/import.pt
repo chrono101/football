@@ -14,21 +14,39 @@
   <![endif]-->
 </head>
 <body>
-  <div id="wrap">
+<div id="wrap">
+  <div id="top-small">
     <div class="align-center">
-    ${file}
-    <hr>
-    ${home}
-    <hr>
-    ${away}
-    <hr>
-    ${rows_processed} rows processed
-    <hr>
-    ${date}
+      <h1>Football Simulator</h1>     
     </div>
   </div>
-  <div id="footer">
-    <div class="footer">&copy; Copyright 2013, Cole Cooper</div>
+  <div id="middle">
+    <div class="align-center">
+      <h2>${file} - ${rows_processed} rows processed</h2>
+    </div>
   </div>
+  <div id="bottom">
+    <div class="bottom">
+      <div id="left">
+        <div class="align-center">
+          <h2>Available Files</h2>
+        </div>
+        <ul>
+          <li tal:repeat="file other_files"><a href="/import?file=${file}">${file}</a></li>
+        </ul>
+      </div>
+      <div id="right">
+        <div class="align-center">
+          <h2>Other Options</h2>
+        </div>
+        <h3><a href="/">Go Home</a></h3>
+        <h3><a href="/create_simulation">Create A Simulation Matchup</a></h3>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="footer">
+  <div class="footer">&copy; Copyright 2013, Cole Cooper</div>
+</div>
 </body>
 </html>

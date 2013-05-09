@@ -14,13 +14,55 @@
   <![endif]-->
 </head>
 <body>
-  <div id="wrap">
+<div id="wrap">
+  <div id="top-small">
     <div class="align-center">
-    ${simulation}
+      <h1>Football Simulator</h1>     
     </div>
   </div>
-  <div id="footer">
-    <div class="footer">&copy; Copyright 2013, Cole Cooper</div>
+  <div id="middle">
+    <div class="align-center">
+      <h2>${result}</h2>
+    </div>
   </div>
+  <div id="bottom">
+    <div class="bottom">
+      <div class="align-center">
+        <h3><a href="/">Go Home</a></h3>
+        <h3>Create New Simulation:</h3>
+        <form action="/create_simulation" method="get">
+          Away Team: 
+          <select name="away">
+            <option tal:repeat="team python:team_list.items()" value="${python:team[0]}">${python:team[1]}</option>
+          </select>
+          Home Team:
+          <select name="home">
+            <option tal:repeat="team python:team_list.items()" value="${python:team[0]}">${python:team[1]}</option>         
+          </select>
+          <input type="submit" value="Create Simulation">
+        </form>
+      </div>
+      <div id="left">
+        <div class="align-center">
+          <h1>Away Team Chain</h1>
+        </div>
+        <code style="font-size:12px">
+          <p tal:repeat="tuple python:simulation.away.items()">${python:tuple}</p>
+        </code>
+      </div>
+      <div id="right">
+        <div class="align-center">
+          <h1>Home Team Chain</h1>
+        </div>
+        <code style="font-size:12px">
+          <p tal:repeat="tuple python:simulation.home.items()">${python:tuple}</p>
+        </code>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="footer">
+  <div class="footer">&copy; Copyright 2013, Cole Cooper</div>
+</div>
 </body>
 </html>

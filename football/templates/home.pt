@@ -25,15 +25,20 @@
       <div id="left">
         <h2>About</h2>
         <p>
-          This web application will simulate football games using data
-          imported from CSV files. To simulate games, 3 steps must be 
-          performed:
+          This application will simulate football games using
+          markov chains, with data imported from NFL play-by-
+          plays. To simulate games, 3 steps must be performed:
         </p>
         <ol>
           <li><a href="/import">Import Play-by-Play Data</a></li>
           <li><a href="/create_simulation">Create a Simulation Matchup</a></li>
-          <li><a href="/simulate">Simulate the Matchup</a></li>
+          <li>Simulate the Matchup!</li>
         </ol>
+        <p>
+          To run a pre-existing simulation, click on it the 
+          link to the right. The default will run 10,000 
+          simulations.
+        </p>
       </div>
       <div id="right">
         <h2>Available Simulations</h2>
