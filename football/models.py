@@ -19,7 +19,7 @@ Defines a football team.
 class Team(Base):
     __tablename__ = 'teams'
     team_id = Column(Integer, primary_key=True)
-    name = Column(String(255), unique=True)
+    name = Column(String(255))
     short_name = Column(String(255))
     season_year = Column(Integer)
   

@@ -146,7 +146,7 @@ def import_view(request):
               seconds_remaining=seconds,
               simulated=False,
               play_type=playtypestr,
-              score_difference=int(row["scorediff"])
+              score_difference=0
               )
 
           DBSession.add(play)
@@ -261,7 +261,7 @@ def createsim_view(request):
           "home":C1, 
           "away":C2
         }, 
-        "result":type(home_id), 
+        "result":"Simulation Created Successfully", 
         "team_list":getTeamListing()
       } 
     else: 
